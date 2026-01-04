@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeu de Mots Croisés</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #fdfdfd; display: flex; flex-direction: column; align-items: center; padding: 10px; margin: 0; }
+        #grid-container { background: #fff; padding: 15px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); display: inline-block; margin-top: 20px; }
+        .row { display: flex; margin-bottom: 2px; height: 32px; }
+        .cell { width: 30px; height: 30px; border: 1px solid #333; display: flex; align-items: center; justify-content: center; background: #fff; transition: background 0.3s; }
+        .empty { border: none; background: transparent !important; }
+        input { width: 100%; height: 100%; border: none; text-align: center; text-transform: uppercase; font-weight: bold; font-size: 16px; outline: none; background: transparent; padding: 0; }
+        .target { background: #ffff00 !important; } 
+        .row-correct .cell { background: #c8e6c9 !important; border-color: #2e7d32; }
+        #clue-box { margin-top: 20px; padding: 15px; background: #f9f9f9; border: 1px solid #ddd; border-left: 5px solid #ffff00; width: 90%; max-width: 400px; min-height: 50px; font-size: 0.95rem; color: #333; }
+        .btn-reset { margin-top: 15px; padding: 8px 15px; background: #e0e0e0; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; color: #666; }
+    </style>
+</head>
+<body>
+
+    <div id="grid-container"></div>
+
+    <div id="clue-box">Touchez une case pour voir l'indice.</div>
+
+    <button class="btn-reset" onclick="window.location.reload()">Réinitialiser la grille</button>
+
+<script>
+    const wordsConfig = [
+        { word: "DOMESTIQUE", targetIdx: 3, clue: "1. Un chat qui a choisi de vivre avec les humains." },
+        { word: "SAUMUR",     targetIdx: 0, clue: "2. La ville des bords de Loire où nous sommes." },
+        { word: "APPAT",      targetIdx: 1, clue: "3. Le morceau de fromage ou de lard." },
+        { word: "LITIERE",    targetIdx: 0, clue: "4. Indispensable pour la propreté de nos félins." },
+        { word: "TRAHISON",   targetIdx: 2, clue: "5. Le pire crime au sein d'un clan." },
+        { word: "NETTOYEUR",  targetIdx: 0, clue: "6. Pratique illégale ou personne qui efface les traces." },
+        { word: "ANCETRE",    targetIdx: 0, clue: "7. Une personne qui a vécu bien avant nous." },
+        { word: "DEGAT",      targetIdx: 0, clue: "8. Trace laissée par les dents ou griffes." },
+        { word: "ESTOMAC",    targetIdx: 0, clue: "9. Organe très extensible chez le chat." },
+        { word: "",           targetIdx: 0, clue: "" }, 
+        { word: "HIERARCHIE", targetIdx: 0, clue: "10. Structure pyramidale très stricte." },
+        { word: "UNITE",      targetIdx: 0, clue: "11. La force du clan qui reste soudé." },
+        { word: "BOSS",       targetIdx: 0, clue: "12. Le chef absolu de la famille." },
+        { word: "RESEAU",     targetIdx: 3, clue: "13. Ensemble de contacts." },
+        { word: "RIVALITE",   targetIdx: 0, clue: "14. Tension entre deux clans." },
+        { word: "TRAFIC",     targetIdx: 0, clue: "15. Commerce illégal." },
+        { word: "",           targetIdx: 0, clue: "" }, 
+        { word: "LANGUE",     targetIdx: 0, clue: "16. Muscle Puissant." },
+        { word: "AGILITE",    targetIdx: 0, clue: "17. Capacité du chat à retomber sur ses pattes." },
+        { word: "NUISIBLES",  targetIdx: 0, clue: "18. Parasites ou destructeurs." },
+        { word: "DENTS",      targetIdx: 0, clue: "19. Elles poussent sans arrêt chez la souris." },
+        { word: "ANGORA",     targetIdx: 0, clue: "20. Chat à poils longs et soyeux." },
+        { word: "INSTINCT",   targetIdx: 0, clue: "21. Ce qui pousse l'animal à agir sans réfléchir." },
+        { word: "SURVIE",     targetIdx: 0, clue: "22. Occupation principale de la souris." }
+    ];
+
+    const container = document.getElementById('grid-container');
+    const clueBox = document.getElementById('clue-box');
+    const YELLOW_COL = 8; 
+
+    wordsConfig.forEach((item, rIdx) => {
+        const row = document.createElement('div');
+        row.className = 'row';
+        row.id = `row-${rIdx}`;
+        
+        if (item.word === "") {
+            row.style.height = "15px"; 
+            container.appendChild(row);
+            return;
+        }
+
+        const startPos = YELLOW_COL - item.targetIdx;
+
+        for (let cIdx = 0; cIdx < 18; cIdx++) {
+            const cell = document.createElement('div');
+            if (cIdx >= startPos && cIdx < startPos + item.word.length) {
+                cell.className = 'cell';
+                if (cIdx === YELLOW_COL) cell.classList.add('target');
+                
+                const input = document.createElement('input');
+                input.maxLength = 1;
+                input.addEventListener('focus', () => clueBox.innerText = item.clue);
+                input.addEventListener('input', (e) => {
+                    if (e.target.value) {
+                        const next = cell.nextElementSibling?.querySelector('input');
+                        if (next) next.focus();
+                    }
+                    checkRow(rIdx, item.word);
+                });
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === "Backspace" && !input.value) {
+                        const prev = cell.previousElementSibling?.querySelector('input');
+                        if (prev) prev.focus();
+                    }
+                });
+                cell.appendChild(input);
+            } else {
+                cell.className = 'cell empty';
+            }
+            row.appendChild(cell);
+        }
+        container.appendChild(row);
+    });
+
+    function checkRow(rowIndex, correctWord) {
+        const row = document.getElementById(`row-${rowIndex}`);
+        const inputs = row.querySelectorAll('input');
+        let val = "";
+        inputs.forEach(i => val += i.value.toUpperCase());
+        if (val === correctWord.toUpperCase()) {
+            row.classList.add('row-correct');
+            inputs.forEach(i => i.readOnly = true);
+        }
+    }
+</script>
+</body>
+</html>
