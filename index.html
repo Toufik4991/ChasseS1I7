@@ -13,7 +13,6 @@
 
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            /* IMAGE DE FOND AVEC PETITS CHATS */
             background: linear-gradient(rgba(255,255,255,0.7), rgba(255,255,255,0.7)), 
                         url('https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
             background-size: cover;
@@ -22,20 +21,23 @@
             display: flex; 
             flex-direction: column; 
             align-items: center; 
-            padding: 20px; 
+            padding: 40px 20px; 
             margin: 0; 
             min-height: 100vh;
+            position: relative;
         }
 
-        h1 { 
-            color: #2c3e50; 
-            text-shadow: 2px 2px 4px rgba(255,255,255,0.8);
-            margin-bottom: 10px; 
-            font-size: 2rem; 
+        /* Petite icône discrète en haut à droite */
+        .corner-cat {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 2rem;
+            opacity: 0.6;
         }
 
         #grid-container { 
-            background: rgba(255, 255, 255, 0.9); /* Effet translucide */
+            background: rgba(255, 255, 255, 0.9); 
             padding: 25px; 
             border-radius: 15px; 
             box-shadow: 0 15px 35px rgba(0,0,0,0.2); 
@@ -82,7 +84,6 @@
             color: #2c3e50;
         }
 
-        /* Lettre bonus pré-remplie */
         input.bonus {
             color: #999;
             background: #f0f0f0;
@@ -132,7 +133,7 @@
 </head>
 <body>
 
-    <h1>🐾 Mots Croisés Chat-mille 🐾</h1>
+    <div class="corner-cat">🐈‍⬛</div>
 
     <div id="grid-container"></div>
 
@@ -151,14 +152,14 @@
         { word: "ANCETRE",    targetIdx: 0, clue: "Une personne qui a vécu bien avant nous." },
         { word: "DEGAT",      targetIdx: 0, clue: "Trace laissée par les dents ou griffes." },
         { word: "ESTOMAC",    targetIdx: 0, clue: "Organe très extensible chez le chat." },
-        { word: "",           targetIdx: 0, clue: "" }, 
+        { word: "",            targetIdx: 0, clue: "" }, 
         { word: "HIERARCHIE", targetIdx: 0, clue: "Structure pyramidale très stricte." },
         { word: "UNITE",      targetIdx: 0, clue: "La force du clan qui reste soudé." },
-        { word: "BOSS",       targetIdx: 0, clue: "Le chef absolu de la famille." },
+        { word: "BOSS",        targetIdx: 0, clue: "Le chef absolu de la famille." },
         { word: "RESEAU",     targetIdx: 3, clue: "Ensemble de contacts." },
         { word: "RIVALITE",   targetIdx: 0, clue: "Tension entre deux clans." },
         { word: "TRAFIC",     targetIdx: 0, clue: "Commerce illégal." },
-        { word: "",           targetIdx: 0, clue: "" }, 
+        { word: "",            targetIdx: 0, clue: "" }, 
         { word: "LANGUE",     targetIdx: 0, clue: "Muscle Puissant." },
         { word: "AGILITE",    targetIdx: 0, clue: "Capacité du chat à retomber sur ses pattes." },
         { word: "NUISIBLES",  targetIdx: 0, clue: "Parasites ou destructeurs." },
@@ -192,8 +193,6 @@
         clueCounter++;
 
         const startPos = YELLOW_COL - item.targetIdx;
-        
-        // Choisir un index de lettre bonus au hasard pour ce mot
         const bonusLetterIdx = Math.floor(Math.random() * item.word.length);
 
         for (let cIdx = 0; cIdx < 18; cIdx++) {
@@ -206,7 +205,6 @@
                 const input = document.createElement('input');
                 input.maxLength = 1;
                 
-                // Appliquer la lettre bonus
                 if (charPosInWord === bonusLetterIdx) {
                     input.value = item.word[charPosInWord];
                     input.readOnly = true;
@@ -237,18 +235,14 @@
             row.appendChild(cell);
         }
         container.appendChild(row);
-        // Vérifier au chargement (pour la lettre bonus)
         checkRow(rIdx, item.word);
     });
 
     function moveFocus(currentCell, direction) {
         let targetCell = (direction === 'next') ? currentCell.nextElementSibling : currentCell.previousElementSibling;
-        
-        // On saute les cellules vides ou les inputs en lecture seule (bonus)
         while (targetCell && (targetCell.classList.contains('empty') || (targetCell.querySelector('input') && targetCell.querySelector('input').readOnly))) {
             targetCell = (direction === 'next') ? targetCell.nextElementSibling : targetCell.previousElementSibling;
         }
-
         if (targetCell) {
             const input = targetCell.querySelector('input');
             if (input) input.focus();
@@ -257,10 +251,10 @@
 
     function checkRow(rowIndex, correctWord) {
         const row = document.getElementById(`row-${rowIndex}`);
+        if (!row) return;
         const inputs = row.querySelectorAll('input');
         let val = "";
         inputs.forEach(i => val += i.value.toUpperCase());
-        
         if (val === correctWord.toUpperCase()) {
             row.classList.add('row-correct');
             inputs.forEach(i => i.readOnly = true);
