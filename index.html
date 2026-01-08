@@ -3,60 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mots Croisés Pro</title>
+    <title>Mots Croisés Félins</title>
     <style>
         :root {
             --primary: #2e7d32;
             --accent: #fbc02d;
-            --bg: #f0f2f5;
             --cell-size: 32px;
         }
 
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background: var(--bg); 
+            /* IMAGE DE FOND AVEC PETITS CHATS */
+            background: linear-gradient(rgba(255,255,255,0.7), rgba(255,255,255,0.7)), 
+                        url('https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
             display: flex; 
             flex-direction: column; 
             align-items: center; 
             padding: 20px; 
             margin: 0; 
-            color: #333;
+            min-height: 100vh;
         }
 
-        h1 { color: var(--primary); margin-bottom: 10px; font-size: 1.5rem; }
+        h1 { 
+            color: #2c3e50; 
+            text-shadow: 2px 2px 4px rgba(255,255,255,0.8);
+            margin-bottom: 10px; 
+            font-size: 2rem; 
+        }
 
         #grid-container { 
-            background: #fff; 
+            background: rgba(255, 255, 255, 0.9); /* Effet translucide */
             padding: 25px; 
-            border-radius: 12px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            border-radius: 15px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2); 
             display: inline-block;
-            border: 1px solid #ddd;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.3);
         }
 
         .row { display: flex; margin-bottom: 4px; align-items: center; }
         
-        /* Numéros des indices */
         .row-label {
             width: 25px;
-            font-size: 0.7rem;
-            color: #999;
+            font-size: 0.75rem;
+            color: #555;
             text-align: right;
-            margin-right: 8px;
+            margin-right: 10px;
             font-weight: bold;
         }
 
         .cell { 
             width: var(--cell-size); 
             height: var(--cell-size); 
-            border: 1px solid #ccc; 
+            border: 1px solid #999; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
             background: #fff; 
             transition: all 0.2s;
             border-radius: 4px;
-            position: relative;
         }
 
         .empty { border: none; background: transparent !important; }
@@ -74,18 +82,21 @@
             color: #2c3e50;
         }
 
-        /* Colonne cible (jaune) */
+        /* Lettre bonus pré-remplie */
+        input.bonus {
+            color: #999;
+            background: #f0f0f0;
+        }
+
         .target { 
             background: #fff9c4 !important; 
             border: 2px solid var(--accent);
             z-index: 1;
         } 
 
-        /* Animation de succès */
         .row-correct .cell { 
-            background: #e8f5e9 !important; 
+            background: #c8e6c9 !important; 
             border-color: var(--primary); 
-            transform: scale(1.02);
         }
         
         .row-correct input { color: var(--primary); }
@@ -93,42 +104,41 @@
         #clue-box { 
             margin-top: 25px; 
             padding: 20px; 
-            background: #fff; 
-            border-radius: 8px;
-            border-left: 6px solid var(--accent); 
-            width: 100%; 
+            background: rgba(255, 255, 255, 0.95); 
+            border-radius: 12px;
+            border-left: 8px solid var(--accent); 
+            width: 90%; 
             max-width: 500px; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             font-size: 1.1rem; 
-            line-height: 1.4;
-            min-height: 40px;
-            transition: all 0.3s ease;
+            min-height: 50px;
         }
 
         .btn-reset { 
-            margin-top: 25px; 
-            padding: 10px 20px; 
-            background: #fff; 
-            border: 1px solid #ccc; 
-            border-radius: 6px; 
+            margin-top: 20px; 
+            padding: 10px 25px; 
+            background: var(--primary); 
+            border: none; 
+            border-radius: 20px; 
             cursor: pointer; 
             font-size: 0.9rem; 
-            color: #666; 
-            transition: all 0.2s;
+            color: white; 
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
         }
 
-        .btn-reset:hover { background: #f5f5f5; border-color: #999; }
+        .btn-reset:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.3); }
     </style>
 </head>
 <body>
 
-    <h1>Mots Croisés</h1>
+    <h1>🐾 Mots Croisés Chat-mille 🐾</h1>
 
     <div id="grid-container"></div>
 
-    <div id="clue-box">Cliquez sur une case pour voir l'indice.</div>
+    <div id="clue-box">Sélectionnez une case pour commencer !</div>
 
-    <button class="btn-reset" onclick="window.location.reload()">Réinitialiser la grille</button>
+    <button class="btn-reset" onclick="window.location.reload()">Nouvelle Partie</button>
 
 <script>
     const wordsConfig = [
@@ -168,14 +178,12 @@
         row.className = 'row';
         row.id = `row-${rIdx}`;
         
-        // Espacement pour les lignes vides
         if (item.word === "") {
             row.style.height = "20px"; 
             container.appendChild(row);
             return;
         }
 
-        // Ajout du numéro de l'indice
         const label = document.createElement('div');
         label.className = 'row-label';
         label.innerText = clueCounter + ".";
@@ -184,40 +192,41 @@
         clueCounter++;
 
         const startPos = YELLOW_COL - item.targetIdx;
+        
+        // Choisir un index de lettre bonus au hasard pour ce mot
+        const bonusLetterIdx = Math.floor(Math.random() * item.word.length);
 
         for (let cIdx = 0; cIdx < 18; cIdx++) {
             const cell = document.createElement('div');
             if (cIdx >= startPos && cIdx < startPos + item.word.length) {
+                const charPosInWord = cIdx - startPos;
                 cell.className = 'cell';
                 if (cIdx === YELLOW_COL) cell.classList.add('target');
                 
                 const input = document.createElement('input');
                 input.maxLength = 1;
                 
-                // Focus: affiche l'indice
+                // Appliquer la lettre bonus
+                if (charPosInWord === bonusLetterIdx) {
+                    input.value = item.word[charPosInWord];
+                    input.readOnly = true;
+                    input.classList.add('bonus');
+                }
+                
                 input.addEventListener('focus', () => {
                     clueBox.innerHTML = `<strong>Indice :</strong><br>${currentClue}`;
                 });
 
-                // Saisie: passe au suivant
                 input.addEventListener('input', (e) => {
                     if (e.target.value) {
-                        const next = cell.nextElementSibling?.querySelector('input');
-                        if (next) {
-                            next.focus();
-                        } else {
-                            // Si fin de mot, essayer d'aller à la ligne suivante
-                            focusNextRow(rIdx);
-                        }
+                        moveFocus(cell, 'next');
                     }
                     checkRow(rIdx, item.word);
                 });
 
-                // Backspace: revient en arrière
                 input.addEventListener('keydown', (e) => {
                     if (e.key === "Backspace" && !input.value) {
-                        const prev = cell.previousElementSibling?.querySelector('input');
-                        if (prev) prev.focus();
+                        moveFocus(cell, 'prev');
                     }
                 });
 
@@ -228,13 +237,21 @@
             row.appendChild(cell);
         }
         container.appendChild(row);
+        // Vérifier au chargement (pour la lettre bonus)
+        checkRow(rIdx, item.word);
     });
 
-    function focusNextRow(currentRowIdx) {
-        const nextRow = document.getElementById(`row-${currentRowIdx + 1}`);
-        if (nextRow) {
-            const firstInput = nextRow.querySelector('input');
-            if (firstInput) firstInput.focus();
+    function moveFocus(currentCell, direction) {
+        let targetCell = (direction === 'next') ? currentCell.nextElementSibling : currentCell.previousElementSibling;
+        
+        // On saute les cellules vides ou les inputs en lecture seule (bonus)
+        while (targetCell && (targetCell.classList.contains('empty') || (targetCell.querySelector('input') && targetCell.querySelector('input').readOnly))) {
+            targetCell = (direction === 'next') ? targetCell.nextElementSibling : targetCell.previousElementSibling;
+        }
+
+        if (targetCell) {
+            const input = targetCell.querySelector('input');
+            if (input) input.focus();
         }
     }
 
@@ -247,8 +264,6 @@
         if (val === correctWord.toUpperCase()) {
             row.classList.add('row-correct');
             inputs.forEach(i => i.readOnly = true);
-        } else {
-            row.classList.remove('row-correct');
         }
     }
 </script>
