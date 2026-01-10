@@ -2,262 +2,258 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mots Croisés Félins</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Séquence Saumur</title>
     <style>
         :root {
-            --primary: #2e7d32;
-            --accent: #fbc02d;
-            --cell-size: 32px;
+            --neon-gold: #fbc02d;
+            --bg-dark: #0a0a0a;
+            --cell-bg: #1a1a1a;
+            --text-color: #e0e0e0;
+            --success-green: #1b5e20;
         }
 
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background: linear-gradient(rgba(255,255,255,0.7), rgba(255,255,255,0.7)), 
-                        url('https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
-            background-size: cover;
-            background-attachment: fixed;
-            background-position: center;
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            padding: 40px 20px; 
-            margin: 0; 
-            min-height: 100vh;
-            position: relative;
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            display: flex; flex-direction: column; align-items: center;
+            margin: 0; padding: 10px; min-height: 100vh; overflow-x: hidden;
+            transition: background 2s ease;
         }
 
-        /* Petite icône discrète en haut à droite */
-        .corner-cat {
-            position: absolute;
-            top: 20px;
-            right: 30px;
-            font-size: 2rem;
-            opacity: 0.6;
+        body.night-mode {
+            background: radial-gradient(circle at center, #001529 0%, #000814 100%);
         }
 
-        #grid-container { 
-            background: rgba(255, 255, 255, 0.9); 
-            padding: 25px; 
-            border-radius: 15px; 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2); 
-            display: inline-block;
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255,255,255,0.3);
+        #game-viewport {
+            width: 100%; max-width: 500px;
+            display: flex; flex-direction: column; gap: 5px;
+            margin-top: 10px; padding-bottom: 160px;
         }
 
-        .row { display: flex; margin-bottom: 4px; align-items: center; }
-        
-        .row-label {
-            width: 25px;
-            font-size: 0.75rem;
-            color: #555;
-            text-align: right;
-            margin-right: 10px;
-            font-weight: bold;
+        .word-row { display: flex; justify-content: center; align-items: center; gap: 3px; }
+
+        .cell {
+            width: 32px; height: 32px; background: var(--cell-bg);
+            border: 1px solid #333; border-radius: 4px;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.5s ease;
         }
 
-        .cell { 
-            width: var(--cell-size); 
-            height: var(--cell-size); 
-            border: 1px solid #999; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            background: #fff; 
-            transition: all 0.2s;
-            border-radius: 4px;
+        .cell input {
+            width: 100%; height: 100%; border: none; background: transparent;
+            color: white; text-align: center; font-size: 1.1rem;
+            font-weight: bold; text-transform: uppercase; outline: none;
         }
 
-        .empty { border: none; background: transparent !important; }
+        .cell.target { border: 1px solid rgba(251, 192, 45, 0.5); }
 
-        input { 
-            width: 100%; 
-            height: 100%; 
-            border: none; 
-            text-align: center; 
-            text-transform: uppercase; 
-            font-weight: bold; 
-            font-size: 18px; 
-            outline: none; 
-            background: transparent; 
-            color: #2c3e50;
+        .row-solved .cell { background: var(--success-green); border-color: #2e7d32; }
+        .row-solved .cell.target {
+            background: var(--neon-gold) !important;
+            border-color: white !important;
+            box-shadow: 0 0 10px var(--neon-gold);
+            z-index: 5;
+        }
+        .row-solved .cell.target input { color: black !important; }
+
+        /* Animation Hint */
+        @keyframes hint-blink {
+            0%, 100% { background: var(--success-green); }
+            50% { background: white; transform: scale(1.1); }
+        }
+        .hint-anim { animation: hint-blink 0.4s ease 2; }
+
+        #clue-panel {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            width: 85%; max-width: 400px; background: rgba(20, 20, 20, 0.95);
+            border: 1px solid #333; padding: 15px; border-radius: 15px;
+            backdrop-filter: blur(10px); text-align: center;
+            border-bottom: 3px solid var(--neon-gold); z-index: 100;
         }
 
-        input.bonus {
-            color: #999;
-            background: #f0f0f0;
+        #hint-btn {
+            position: fixed; bottom: 130px; right: 20px;
+            width: 55px; height: 55px; border-radius: 50%;
+            background: #222; border: 2px solid var(--neon-gold);
+            font-size: 1.6rem; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 101;
+            box-shadow: 0 0 15px rgba(251, 192, 45, 0.4);
+            animation: pulse-gold 2s infinite;
         }
 
-        .target { 
-            background: #fff9c4 !important; 
-            border: 2px solid var(--accent);
-            z-index: 1;
-        } 
-
-        .row-correct .cell { 
-            background: #c8e6c9 !important; 
-            border-color: var(--primary); 
-        }
-        
-        .row-correct input { color: var(--primary); }
-
-        #clue-box { 
-            margin-top: 25px; 
-            padding: 20px; 
-            background: rgba(255, 255, 255, 0.95); 
-            border-radius: 12px;
-            border-left: 8px solid var(--accent); 
-            width: 90%; 
-            max-width: 500px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            font-size: 1.1rem; 
-            min-height: 50px;
+        @keyframes pulse-gold {
+            0% { box-shadow: 0 0 0 0px rgba(251, 192, 45, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(251, 192, 45, 0); }
+            100% { box-shadow: 0 0 0 0px rgba(251, 192, 45, 0); }
         }
 
-        .btn-reset { 
-            margin-top: 20px; 
-            padding: 10px 25px; 
-            background: var(--primary); 
-            border: none; 
-            border-radius: 20px; 
-            cursor: pointer; 
-            font-size: 0.9rem; 
-            color: white; 
-            font-weight: bold;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        #hint-count {
+            position: absolute; top: -5px; right: -5px;
+            background: var(--neon-gold); color: black;
+            font-size: 0.75rem; font-weight: bold;
+            padding: 2px 7px; border-radius: 10px; border: 1px solid black;
         }
 
-        .btn-reset:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.3); }
+        .flying-letter {
+            width: 36px; height: 36px; background: var(--neon-gold);
+            color: black; font-weight: bold; display: flex;
+            align-items: center; justify-content: center;
+            border-radius: 4px; box-shadow: 0 0 20px var(--neon-gold);
+            position: fixed; z-index: 9999; transition: all 1.5s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+
+        .particle {
+            position: fixed; background: var(--neon-gold);
+            border-radius: 50%; pointer-events: none; z-index: 9998;
+        }
+
+        .destroyed { transform: translateY(120vh) rotate(540deg); opacity: 0; }
     </style>
 </head>
 <body>
 
-    <div class="corner-cat">🐈‍⬛</div>
-
-    <div id="grid-container"></div>
-
-    <div id="clue-box">Sélectionnez une case pour commencer !</div>
-
-    <button class="btn-reset" onclick="window.location.reload()">Nouvelle Partie</button>
+    <div id="game-viewport"></div>
+    <div id="hint-btn" onclick="giveHint()">💡 <span id="hint-count">10</span></div>
+    <div id="clue-panel"><div id="clue-text">Appuyez sur une case pour l'indice</div></div>
 
 <script>
-    const wordsConfig = [
-        { word: "DOMESTIQUE", targetIdx: 3, clue: "Un chat qui a choisi de vivre avec les humains." },
-        { word: "SAUMUR",     targetIdx: 0, clue: "La ville des bords de Loire où nous sommes." },
-        { word: "APPAT",      targetIdx: 1, clue: "Le morceau de fromage ou de lard." },
-        { word: "LITIERE",    targetIdx: 0, clue: "Indispensable pour la propreté de nos félins." },
-        { word: "TRAHISON",   targetIdx: 2, clue: "Le pire crime au sein d'un clan." },
-        { word: "NETTOYEUR",  targetIdx: 0, clue: "Pratique illégale ou personne qui efface les traces." },
-        { word: "ANCETRE",    targetIdx: 0, clue: "Une personne qui a vécu bien avant nous." },
-        { word: "DEGAT",      targetIdx: 0, clue: "Trace laissée par les dents ou griffes." },
-        { word: "ESTOMAC",    targetIdx: 0, clue: "Organe très extensible chez le chat." },
-        { word: "",            targetIdx: 0, clue: "" }, 
-        { word: "HIERARCHIE", targetIdx: 0, clue: "Structure pyramidale très stricte." },
-        { word: "UNITE",      targetIdx: 0, clue: "La force du clan qui reste soudé." },
-        { word: "BOSS",        targetIdx: 0, clue: "Le chef absolu de la famille." },
-        { word: "RESEAU",     targetIdx: 3, clue: "Ensemble de contacts." },
-        { word: "RIVALITE",   targetIdx: 0, clue: "Tension entre deux clans." },
-        { word: "TRAFIC",     targetIdx: 0, clue: "Commerce illégal." },
-        { word: "",            targetIdx: 0, clue: "" }, 
-        { word: "LANGUE",     targetIdx: 0, clue: "Muscle Puissant." },
-        { word: "AGILITE",    targetIdx: 0, clue: "Capacité du chat à retomber sur ses pattes." },
-        { word: "NUISIBLES",  targetIdx: 0, clue: "Parasites ou destructeurs." },
-        { word: "DENTS",      targetIdx: 0, clue: "Elles poussent sans arrêt chez la souris." },
-        { word: "ANGORA",     targetIdx: 0, clue: "Chat à poils longs et soyeux." },
-        { word: "INSTINCT",   targetIdx: 0, clue: "Ce qui pousse l'animal à agir sans réfléchir." },
-        { word: "SURVIE",     targetIdx: 0, clue: "Occupation principale de la souris." }
+    const targetPhrase = "ESPLANADE HUBERT LANDAIS";
+    let hintsLeft = 10;
+    let currentFocusedRow = null;
+
+    const config = [
+        { word: "SAUMUR",     targetIdx: 3, clue: "La perle de l'anjou 🌙" }, 
+        { word: "CASSOS",     targetIdx: 2, clue: "Il y a en beaucoup a Saumur 🤪" }, 
+        { word: "ESPRIT",     targetIdx: 1, clue: "Partie immatérielle de l'être." }, 
+        { word: "ANGORA",     targetIdx: 0, clue: "Espèce de chat célèbre." }, 
+        { word: "SAUVAGE",    targetIdx: 2, clue: "Qui n'est pas domestiqué." }, 
+        { word: "POISON",     targetIdx: 5, clue: "Substance toxique." }, 
+        { word: "MURAILLE",   targetIdx: 4, clue: "Obstacle de pierre." }, 
+        { word: "EVIDENCE",   targetIdx: 0, clue: "Ce qui s'impose à l'esprit." }, 
+        { word: "CHIMERE",    targetIdx: 1, clue: "Créature mythologique." }, 
+        { word: "SOUVENIR",   targetIdx: 1, clue: "Image du passé." }, 
+        { word: "OBSCUR",     targetIdx: 1, clue: "Qui manque de lumière." }, 
+        { word: "REBELLE",    targetIdx: 0, clue: "Qui refuse l'autorité." }, 
+        { word: "MISTRAL",    targetIdx: 3, clue: "Vent puissant du couloir rhodanien." }, 
+        { word: "INSTINCT",   targetIdx: 3, clue: "Pulsion naturelle." }, 
+        { word: "SILENCE",    targetIdx: 2, clue: "Absence de bruit." }, 
+        { word: "ABYSSE",     targetIdx: 4, clue: "Profondeur immense." }, 
+        { word: "SOUFRE",     targetIdx: 0, clue: "Element qui pue l Oeuf Pourri" }, 
+        { word: "VENIMEUX",   targetIdx: 2, clue: "Se dit d'un serpent." }, 
+        { word: "RELIQUE",    targetIdx: 0, clue: "Objet ayant appartenu à un saint." }, 
+        { word: "ECLIPSE",    targetIdx: 3, clue: "Disparition d'un astre." }, 
+        { word: "RESINE",     targetIdx: 3, clue: "Substance des pins." },
+        { word: "SANGUIN",    targetIdx: 0, clue: "Tempérament vif ou couleur du sang." }
     ];
 
-    const container = document.getElementById('grid-container');
-    const clueBox = document.getElementById('clue-box');
-    const YELLOW_COL = 8; 
-    let clueCounter = 1;
+    const viewport = document.getElementById('game-viewport');
+    const clueDisplay = document.getElementById('clue-text');
+    let solvedCount = 0;
 
-    wordsConfig.forEach((item, rIdx) => {
+    config.forEach((data, rIdx) => {
         const row = document.createElement('div');
-        row.className = 'row';
-        row.id = `row-${rIdx}`;
-        
-        if (item.word === "") {
-            row.style.height = "20px"; 
-            container.appendChild(row);
-            return;
-        }
-
-        const label = document.createElement('div');
-        label.className = 'row-label';
-        label.innerText = clueCounter + ".";
-        row.appendChild(label);
-        const currentClue = clueCounter + ". " + item.clue;
-        clueCounter++;
-
-        const startPos = YELLOW_COL - item.targetIdx;
-        const bonusLetterIdx = Math.floor(Math.random() * item.word.length);
-
-        for (let cIdx = 0; cIdx < 18; cIdx++) {
+        row.className = 'word-row';
+        row.dataset.answer = data.word.toUpperCase();
+        for (let i = 0; i < data.word.length; i++) {
             const cell = document.createElement('div');
-            if (cIdx >= startPos && cIdx < startPos + item.word.length) {
-                const charPosInWord = cIdx - startPos;
-                cell.className = 'cell';
-                if (cIdx === YELLOW_COL) cell.classList.add('target');
-                
-                const input = document.createElement('input');
-                input.maxLength = 1;
-                
-                if (charPosInWord === bonusLetterIdx) {
-                    input.value = item.word[charPosInWord];
-                    input.readOnly = true;
-                    input.classList.add('bonus');
-                }
-                
-                input.addEventListener('focus', () => {
-                    clueBox.innerHTML = `<strong>Indice :</strong><br>${currentClue}`;
-                });
-
-                input.addEventListener('input', (e) => {
-                    if (e.target.value) {
-                        moveFocus(cell, 'next');
-                    }
-                    checkRow(rIdx, item.word);
-                });
-
-                input.addEventListener('keydown', (e) => {
-                    if (e.key === "Backspace" && !input.value) {
-                        moveFocus(cell, 'prev');
-                    }
-                });
-
-                cell.appendChild(input);
-            } else {
-                cell.className = 'cell empty';
-            }
+            cell.className = 'cell';
+            if (i === data.targetIdx) cell.classList.add('target');
+            const input = document.createElement('input');
+            input.maxLength = 1;
+            input.addEventListener('focus', () => { currentFocusedRow = row; clueDisplay.innerHTML = `<strong>Ligne ${rIdx + 1} :</strong><br>${data.clue}`; });
+            input.addEventListener('input', (e) => { e.target.value = e.target.value.toUpperCase(); if (e.target.value) moveFocus(input, 1); checkRow(row); });
+            input.addEventListener('keydown', (e) => { if (e.key === 'Backspace' && !input.value) moveFocus(input, -1); });
+            cell.appendChild(input);
             row.appendChild(cell);
         }
-        container.appendChild(row);
-        checkRow(rIdx, item.word);
+        viewport.appendChild(row);
     });
 
-    function moveFocus(currentCell, direction) {
-        let targetCell = (direction === 'next') ? currentCell.nextElementSibling : currentCell.previousElementSibling;
-        while (targetCell && (targetCell.classList.contains('empty') || (targetCell.querySelector('input') && targetCell.querySelector('input').readOnly))) {
-            targetCell = (direction === 'next') ? targetCell.nextElementSibling : targetCell.previousElementSibling;
-        }
-        if (targetCell) {
-            const input = targetCell.querySelector('input');
-            if (input) input.focus();
+    function moveFocus(input, dir) {
+        const inputs = Array.from(input.closest('.word-row').querySelectorAll('input'));
+        const idx = inputs.indexOf(input);
+        if (inputs[idx + dir]) inputs[idx + dir].focus();
+    }
+
+    function checkRow(row) {
+        if (row.classList.contains('row-solved')) return;
+        const inputs = Array.from(row.querySelectorAll('input'));
+        const val = inputs.map(i => i.value).join('');
+        if (val === row.dataset.answer) {
+            row.classList.add('row-solved');
+            inputs.forEach(i => i.readOnly = true);
+            solvedCount++;
+            if (solvedCount === config.length) setTimeout(celebrate, 800);
         }
     }
 
-    function checkRow(rowIndex, correctWord) {
-        const row = document.getElementById(`row-${rowIndex}`);
-        if (!row) return;
-        const inputs = row.querySelectorAll('input');
-        let val = "";
-        inputs.forEach(i => val += i.value.toUpperCase());
-        if (val === correctWord.toUpperCase()) {
-            row.classList.add('row-correct');
-            inputs.forEach(i => i.readOnly = true);
+    function giveHint() {
+        if (hintsLeft <= 0 || !currentFocusedRow || currentFocusedRow.classList.contains('row-solved')) return;
+        const cells = Array.from(currentFocusedRow.querySelectorAll('.cell'));
+        const emptyIndices = cells.map((c, i) => (c.querySelector('input').value.toUpperCase() !== currentFocusedRow.dataset.answer[i] && !c.classList.contains('target')) ? i : null).filter(n => n !== null);
+        if (emptyIndices.length > 0) {
+            const randIdx = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+            const cell = cells[randIdx];
+            const inp = cell.querySelector('input');
+            cell.classList.add('hint-anim');
+            setTimeout(() => { inp.value = currentFocusedRow.dataset.answer[randIdx]; checkRow(currentFocusedRow); cell.classList.remove('hint-anim'); }, 800);
+            hintsLeft--;
+            document.getElementById('hint-count').innerText = hintsLeft;
+            if(navigator.vibrate) navigator.vibrate(20);
+        }
+    }
+
+    function celebrate() {
+        document.body.classList.add('night-mode');
+        document.getElementById('clue-panel').style.opacity = "0";
+        document.getElementById('hint-btn').style.display = "none";
+        
+        document.querySelectorAll('.cell:not(.target)').forEach((cell, i) => {
+            setTimeout(() => { cell.classList.add('destroyed'); createParticle(cell); }, i * 20);
+        });
+
+        const targetCells = Array.from(document.querySelectorAll('.cell.target'));
+        const cleanPhrase = targetPhrase.replace(/\s/g, '');
+
+        targetCells.forEach((cell, index) => {
+            const rect = cell.getBoundingClientRect();
+            const letter = document.createElement('div');
+            letter.className = 'flying-letter';
+            letter.innerText = cleanPhrase[index];
+            letter.style.left = rect.left + 'px';
+            letter.style.top = rect.top + 'px';
+            document.body.appendChild(letter);
+            cell.style.opacity = "0";
+
+            setTimeout(() => {
+                const rows = [{start: 0, len: 9, y: 30}, {start: 9, len: 6, y: 45}, {start: 15, len: 7, y: 60}];
+                const p = rows.find(r => index >= r.start && index < r.start + r.len);
+                const colIdx = index - p.start;
+                const totalW = p.len * 42;
+                letter.style.left = `calc(50% - ${totalW/2}px + ${colIdx * 42}px)`;
+                letter.style.top = p.y + '%';
+            }, 500 + (index * 60));
+        });
+    }
+
+    function createParticle(el) {
+        const rect = el.getBoundingClientRect();
+        for(let i=0; i<3; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            const size = Math.random() * 4 + 2;
+            p.style.width = size + 'px'; p.style.height = size + 'px';
+            p.style.left = rect.left + rect.width/2 + 'px';
+            p.style.top = rect.top + rect.height/2 + 'px';
+            document.body.appendChild(p);
+            const angle = Math.random() * Math.PI * 2;
+            const velocity = Math.random() * 100 + 50;
+            p.animate([
+                { transform: 'translate(0,0) scale(1)', opacity: 1 },
+                { transform: `translate(${Math.cos(angle)*velocity}px, ${Math.sin(angle)*velocity}px) scale(0)`, opacity: 0 }
+            ], { duration: 1000 + Math.random()*1000, easing: 'out-cubic' }).onfinish = () => p.remove();
         }
     }
 </script>
